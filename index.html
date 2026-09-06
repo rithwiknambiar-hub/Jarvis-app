@@ -124,10 +124,24 @@
   .eye-crosshair::before{top:50%;left:-7px;right:-7px;height:1px;}
   .eye-crosshair::after{left:50%;top:-7px;bottom:-7px;width:1px;}
   .eye-status{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);font-family:'Share Tech Mono',monospace;font-size:0.5rem;color:var(--hud);letter-spacing:0.14em;text-align:center;pointer-events:none;white-space:nowrap;}
-  .orbit-icon-inner.gaze-target{background:rgba(0,255,140,0.3) !important;box-shadow:0 0 34px rgba(0,255,140,0.65) !important;}
+  .orbit-icon-inner.gaze-target{background:rgba(0,255,140,0.3) !important;box-shadow:0 0 34px rgba(0,255,140,0.65) !important;transform:scale(1.18) !important;}
   #gogglesExit{position:fixed;top:8px;right:8px;z-index:2001;background:rgba(255,40,60,0.18);border:1px solid rgba(255,40,60,0.5);color:var(--danger);font-family:'Share Tech Mono',monospace;font-size:0.55rem;padding:7px 12px;border-radius:20px;letter-spacing:0.14em;}
-  #gogglesRotateHint{position:fixed;inset:0;background:rgba(2,8,18,0.96);z-index:2002;display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;font-family:'Share Tech Mono',monospace;color:var(--hud);letter-spacing:0.15em;font-size:0.85rem;text-align:center;padding:20px;}
-  @media(orientation:portrait){#gogglesOverlay.show ~ #gogglesRotateHint,body.goggles-portrait-warn #gogglesRotateHint{display:flex;}}
+
+  /* Fewer HUD elements while wearing goggles / in AR — declutter like the Iron Man reference */
+  body.ar-mode .orbit-icon-extra{display:none;}
+
+  /* Vertical Vision-Pro style floating "screen" panel showing the main Jarvis feed */
+  .goggle-screen{position:absolute;top:50%;left:50%;transform:translate(-50%,-54%);width:34%;max-width:190px;aspect-ratio:9/16;background:rgba(0,16,32,0.5);border:1px solid rgba(0,200,255,0.4);border-radius:20px;backdrop-filter:blur(10px);box-shadow:0 0 40px rgba(0,200,255,0.22),inset 0 0 20px rgba(0,200,255,0.05);display:flex;flex-direction:column;padding:12px 10px;gap:6px;pointer-events:none;}
+  .goggle-screen-header{font-family:'Share Tech Mono',monospace;font-size:0.5rem;color:var(--hud);letter-spacing:0.18em;border-bottom:1px solid rgba(0,200,255,0.2);padding-bottom:6px;display:flex;justify-content:space-between;align-items:center;}
+  .goggle-screen-dot{width:5px;height:5px;border-radius:50%;background:#00ff88;box-shadow:0 0 6px #00ff88;animation:pulse-dot 2s ease-in-out infinite;}
+  .goggle-screen-msgs{flex:1;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;gap:6px;}
+  .goggle-msg{font-family:'Rajdhani',sans-serif;font-size:0.62rem;line-height:1.35;padding:5px 7px;border-radius:4px;background:rgba(0,180,255,0.08);border-left:2px solid var(--hud);color:var(--text);}
+  .goggle-msg.user{background:rgba(0,100,200,0.12);border-left-color:rgba(0,120,255,0.7);opacity:0.85;}
+
+  /* Pinch cursor (hand-tracking) */
+  .pinch-cursor{position:fixed;width:18px;height:18px;margin:-9px;border-radius:50%;border:2px solid #ffd54a;box-shadow:0 0 14px rgba(255,213,74,0.7);pointer-events:none;display:none;transition:transform 0.05s linear;z-index:2010;}
+  .pinch-cursor.active{background:rgba(255,213,74,0.35);transform:scale(0.7);}
+  .hand-status{position:absolute;top:12px;left:50%;transform:translateX(-50%);font-family:'Share Tech Mono',monospace;font-size:0.48rem;color:var(--muted);letter-spacing:0.14em;pointer-events:none;}
   .voice-controls{display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--muted);padding:2px 0;}
   .toggle{width:30px;height:16px;border-radius:8px;background:rgba(0,200,255,0.1);border:1px solid var(--border);position:relative;transition:all 0.3s;cursor:pointer;flex-shrink:0;}
   .toggle.on{background:rgba(0,200,255,0.25);border-color:var(--hud);box-shadow:0 0 10px rgba(0,200,255,0.2);}
@@ -143,6 +157,7 @@
   .btn-test:hover{background:rgba(255,160,64,0.2);box-shadow:0 0 14px rgba(255,160,64,0.2);border-color:var(--warm);}
   .btn-test:active{transform:scale(0.96);}
   #particleCanvas{position:fixed;inset:0;pointer-events:none;z-index:1;opacity:0.4;}
+  body.ar-mode #particleCanvas{display:none;}
 
   /* ---------- Floating orbiting icons (Iron Man style) ---------- */
   #orbitLayer{position:fixed;inset:0;pointer-events:none;z-index:5;display:flex;align-items:center;justify-content:center;perspective:900px;}
@@ -367,10 +382,10 @@
     <div class="orbit-icon" style="transform:rotate(120deg) translateX(150px) rotate(-120deg)" data-cmd="search ai news">
       <div class="orbit-icon-inner">🔍</div><div class="orbit-label">SEARCH</div>
     </div>
-    <div class="orbit-icon" style="transform:rotate(180deg) translateX(150px) rotate(-180deg)" data-cmd="joke">
+    <div class="orbit-icon orbit-icon-extra" style="transform:rotate(180deg) translateX(150px) rotate(-180deg)" data-cmd="joke">
       <div class="orbit-icon-inner">💬</div><div class="orbit-label">JOKE</div>
     </div>
-    <div class="orbit-icon" style="transform:rotate(240deg) translateX(150px) rotate(-240deg)" data-cmd="who are you">
+    <div class="orbit-icon orbit-icon-extra" style="transform:rotate(240deg) translateX(150px) rotate(-240deg)" data-cmd="who are you">
       <div class="orbit-icon-inner">◈</div><div class="orbit-label">ID</div>
     </div>
     <div class="orbit-icon" style="transform:rotate(300deg) translateX(150px) rotate(-300deg)" data-cmd="__mic__">
@@ -385,12 +400,9 @@
   <div class="eye-pane" id="eyeRight"></div>
   <button id="gogglesExit">✕ EXIT GOGGLES</button>
 </div>
-<div id="gogglesRotateHint">
-  <div>⟳</div>
-  <div>ROTATE YOUR PHONE TO LANDSCAPE<br/>THEN STRAP INTO YOUR HEADSET</div>
-</div>
 
 <!-- VOICE OVERLAY -->
+
 <div id="voiceOverlay">
   <div class="vo-status" id="voStatus">LISTENING...</div>
   <div class="vo-rings">
@@ -411,18 +423,43 @@
 <div id="settingsOverlay">
   <div class="settings-box">
     <div class="settings-title">▸ JARVIS CONFIGURATION</div>
-    <div class="settings-note">Enter your own Google Gemini API key. It is stored only in this browser (localStorage) and sent directly from your device to Google's API — never through any other server. Get a free key at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>.</div>
+    <div class="settings-note">Choose a neural core provider and paste your own API key. It is stored only in this browser (localStorage) and sent directly from your device to the provider — never through any other server.</div>
     <div class="settings-field">
-      <label class="settings-label">GEMINI API KEY</label>
-      <input class="settings-input" id="geminiKeyInput" type="password" placeholder="AIza..." autocomplete="off"/>
-    </div>
-    <div class="settings-field">
-      <label class="settings-label">MODEL</label>
-      <select class="settings-input" id="geminiModelSelect">
-        <option value="gemini-2.5-flash">gemini-2.5-flash (recommended)</option>
-        <option value="gemini-2.5-pro">gemini-2.5-pro</option>
-        <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+      <label class="settings-label">NEURAL CORE PROVIDER</label>
+      <select class="settings-input" id="providerSelect">
+        <option value="gemini">Google Gemini</option>
+        <option value="groq">Groq (fastest — recommended for wake word)</option>
       </select>
+    </div>
+    <div id="geminiFields">
+      <div class="settings-field">
+        <label class="settings-label">GEMINI API KEY</label>
+        <input class="settings-input" id="geminiKeyInput" type="password" placeholder="AIza..." autocomplete="off"/>
+        <div class="settings-note" style="margin:6px 0 0;">Free key: <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a></div>
+      </div>
+      <div class="settings-field">
+        <label class="settings-label">MODEL</label>
+        <select class="settings-input" id="geminiModelSelect">
+          <option value="gemini-2.5-flash">gemini-2.5-flash (recommended)</option>
+          <option value="gemini-2.5-pro">gemini-2.5-pro</option>
+          <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+        </select>
+      </div>
+    </div>
+    <div id="groqFields" style="display:none;">
+      <div class="settings-field">
+        <label class="settings-label">GROQ API KEY</label>
+        <input class="settings-input" id="groqKeyInput" type="password" placeholder="gsk_..." autocomplete="off"/>
+        <div class="settings-note" style="margin:6px 0 0;">Free key: <a href="https://console.groq.com/keys" target="_blank" rel="noopener">console.groq.com/keys</a></div>
+      </div>
+      <div class="settings-field">
+        <label class="settings-label">MODEL</label>
+        <select class="settings-input" id="groqModelSelect">
+          <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile (recommended)</option>
+          <option value="llama-3.1-8b-instant">llama-3.1-8b-instant (fastest)</option>
+          <option value="openai/gpt-oss-120b">openai/gpt-oss-120b</option>
+        </select>
+      </div>
     </div>
     <div class="settings-actions">
       <button class="btn" id="settingsCancel" style="background:transparent;color:var(--muted);">CLOSE</button>
@@ -452,13 +489,26 @@ let isSpeaking = false;
 let recognition = null;
 let voiceOverlayOpen = false;
 
-// ---------- Gemini config ----------
+// ---------- Neural core provider config (Gemini / Groq) ----------
+// A built-in default key so anyone opening this link works out of the box.
+// NOTE: this is visible to anyone who views this page's source.
+const BUILTIN_GROQ_KEY = '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';
+let aiProvider = localStorage.getItem('jarvis_provider') || 'groq';
 let geminiApiKey = localStorage.getItem('jarvis_gemini_key') || '';
 let geminiModel = localStorage.getItem('jarvis_gemini_model') || 'gemini-2.5-flash';
+let groqApiKey = localStorage.getItem('jarvis_groq_key') || BUILTIN_GROQ_KEY;
+let groqModel = localStorage.getItem('jarvis_groq_model') || 'llama-3.3-70b-versatile';
 function refreshGeminiStatus(){
-  document.getElementById('geminiStatusText').textContent = geminiApiKey ? 'linked' : 'no key';
+  const active = aiProvider==='groq' ? !!groqApiKey : !!geminiApiKey;
+  const label = aiProvider==='groq' ? 'groq' : 'gemini';
+  document.getElementById('geminiStatusText').textContent = active ? (label+' linked') : 'no key';
 }
 refreshGeminiStatus();
+
+// perfSaveMode trims background visual work (particles, log spam) while AR/goggles
+// need every spare cycle for the camera feed and (optionally) hand tracking.
+let perfSaveMode = false;
+const FRAME_BUDGET_MS = 1000/60; // steady 60fps ceiling for all our own rAF-driven loops
 
 // ---------- PWA install + service worker ----------
 if('serviceWorker' in navigator){
@@ -526,6 +576,7 @@ const metricMap = [
 ];
 
 function updateMetrics(){
+  if(perfSaveMode) return;
   Object.values(metricState).forEach(m=>{
     if(Math.random()<0.12) m.target = m.min + Math.random()*(m.max-m.min);
     m.val += (m.target - m.val) * m.speed;
@@ -552,7 +603,20 @@ function addLog(text,type='info'){
   syslog.appendChild(el);syslog.scrollTop=syslog.scrollHeight;
   while(syslog.children.length>18)syslog.removeChild(syslog.firstChild);
 }
-setInterval(()=>{addLog(logMsgs[logIdx%logMsgs.length],'info');logIdx++;},4000);
+setInterval(()=>{ if(perfSaveMode) return; addLog(logMsgs[logIdx%logMsgs.length],'info');logIdx++;},4000);
+
+const recentMessages = [];
+function renderGogglePanels(){
+  document.querySelectorAll('.goggle-screen-msgs').forEach(el=>{
+    el.innerHTML='';
+    recentMessages.slice(-3).forEach(m=>{
+      const d=document.createElement('div');
+      d.className='goggle-msg'+(m.role==='user'?' user':'');
+      d.textContent = m.text.length>80 ? m.text.slice(0,80)+'…' : m.text;
+      el.appendChild(d);
+    });
+  });
+}
 
 function addMsg(role,text){
   const wrap=document.createElement('div');wrap.className='msg '+role;
@@ -560,7 +624,10 @@ function addMsg(role,text){
   from.textContent=role==='jarvis'?'▸ J.A.R.V.I.S':'▸ USER INPUT';
   const bubble=document.createElement('div');bubble.className='bubble';bubble.textContent=text;
   wrap.appendChild(from);wrap.appendChild(bubble);screen.appendChild(wrap);
-  screen.scrollTop=screen.scrollHeight;return bubble;
+  screen.scrollTop=screen.scrollHeight;
+  recentMessages.push({role,text}); if(recentMessages.length>20) recentMessages.shift();
+  renderGogglePanels();
+  return bubble;
 }
 
 function showTyping(){
@@ -596,7 +663,11 @@ window.speechSynthesis.onvoiceschanged=()=>{};
 const waveCanvas=document.getElementById('waveCanvas');
 const wCtx=waveCanvas.getContext('2d');
 let wavePhase=0;
-function drawWave(){
+let waveLastFrame=0;
+function drawWave(ts=0){
+  if(ts-waveLastFrame < FRAME_BUDGET_MS){ requestAnimationFrame(drawWave); return; }
+  waveLastFrame += FRAME_BUDGET_MS;
+  if(ts-waveLastFrame > FRAME_BUDGET_MS*2) waveLastFrame=ts;
   const W=waveCanvas.offsetWidth||680,H=50;
   waveCanvas.width=W;waveCanvas.height=H;
   wCtx.clearRect(0,0,W,H);
@@ -624,8 +695,11 @@ drawWave();
 // Voice overlay waveform
 const voiceCanvas=document.getElementById('voiceCanvas');
 const vCtx=voiceCanvas.getContext('2d');
-let voicePhase=0,voiceAmp=0;
-function drawVoiceWave(){
+let voicePhase=0,voiceAmp=0,voiceLastFrame=0;
+function drawVoiceWave(ts=0){
+  if(ts-voiceLastFrame < FRAME_BUDGET_MS){ if(voiceOverlayOpen) requestAnimationFrame(drawVoiceWave); return; }
+  voiceLastFrame += FRAME_BUDGET_MS;
+  if(ts-voiceLastFrame > FRAME_BUDGET_MS*2) voiceLastFrame=ts;
   const W=voiceCanvas.offsetWidth||400,H=60;
   voiceCanvas.width=W;voiceCanvas.height=H;
   vCtx.clearRect(0,0,W,H);
@@ -715,10 +789,12 @@ ttsToggle.addEventListener('click',()=>{
 let wakeRecognition = null;
 let wakeActive = false;   // user has toggled wake word on
 let wakeRunning = false;  // recognition instance currently running
+const wakeSupported = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+const isIOSDevice = /iphone|ipad|ipod/i.test(navigator.userAgent);
 
 function startWakeWordListener(){
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if(!SR){ addLog('[WAKE] Speech API unavailable','warn'); return; }
+  if(!SR){ return; }
   if(!wakeRecognition){
     wakeRecognition = new SR();
     wakeRecognition.lang='en-US';
@@ -728,40 +804,60 @@ function startWakeWordListener(){
       let transcript='';
       for(let i=e.resultIndex;i<e.results.length;i++) transcript += e.results[i][0].transcript;
       transcript = transcript.toLowerCase();
-      if(transcript.includes('hey jarvis') || transcript.includes('hey, jarvis') || transcript.includes('jarvis wake')){
+      if(transcript.includes('hey jarvis') || transcript.includes('hey, jarvis') || transcript.includes('jarvis wake') || transcript.includes('jarvis')){
         try{ wakeRecognition.stop(); }catch(e){}
         reply('Yes, sir?');
-        setTimeout(()=>{ if(wakeActive) openVoiceOverlay(); }, 500);
+        setTimeout(()=>{ if(wakeActive) openVoiceOverlay(); }, 450);
       }
     };
     wakeRecognition.onend=()=>{
       wakeRunning=false;
+      // Chrome on Android silently ends this after a short stretch of silence —
+      // that is normal, so re-arm almost instantly rather than treating it as a fault.
       if(wakeActive && !isListening && !voiceOverlayOpen){
-        setTimeout(()=>{ if(wakeActive) startWakeWordListener(); }, 300);
+        setTimeout(()=>{ if(wakeActive) startWakeWordListener(); }, 120);
       }
     };
     wakeRecognition.onerror=(e)=>{
       wakeRunning=false;
-      if(wakeActive && e.error!=='aborted'){
-        setTimeout(()=>{ if(wakeActive) startWakeWordListener(); }, 1200);
+      if(!wakeActive) return;
+      if(e.error==='no-speech' || e.error==='aborted'){
+        setTimeout(()=>{ if(wakeActive) startWakeWordListener(); }, 150);
+      } else if(e.error==='not-allowed' || e.error==='service-not-allowed'){
+        wakeActive=false;
+        wakeBtn.classList.remove('active');
+        document.getElementById('wakeStatusText').textContent='mic blocked';
+        reply('I need microphone permission to listen for my wake word, sir. Please allow microphone access for this site and try again.');
+      } else {
+        setTimeout(()=>{ if(wakeActive) startWakeWordListener(); }, 1000);
       }
     };
   }
   if(wakeRunning) return;
-  try{ wakeRecognition.start(); wakeRunning=true; addLog('[WAKE] Listening for "Hey Jarvis"','ok'); }catch(e){}
+  try{ wakeRecognition.start(); wakeRunning=true; addLog('[WAKE] Armed — listening for "Hey Jarvis"','ok'); }catch(e){}
 }
 function pauseWakeWord(){
   if(wakeRecognition && wakeRunning){ try{ wakeRecognition.stop(); }catch(e){} wakeRunning=false; }
 }
 function resumeWakeWord(){
-  if(wakeActive && !voiceOverlayOpen) setTimeout(startWakeWordListener, 400);
+  if(wakeActive && !voiceOverlayOpen) setTimeout(startWakeWordListener, 150);
 }
-wakeBtn.addEventListener('click',()=>{
+wakeBtn.addEventListener('click', async ()=>{
+  if(!wakeSupported){
+    reply(isIOSDevice
+      ? 'Continuous wake-word listening is not something Safari on iPhone supports yet, sir — that is an Apple platform restriction, not something I can code around. Chrome on Android handles it natively.'
+      : 'This browser does not expose the speech recognition API I need for wake-word detection, sir. Please try Chrome on Android.');
+    return;
+  }
   wakeActive=!wakeActive;
   wakeBtn.classList.toggle('active',wakeActive);
-  document.getElementById('wakeStatusText').textContent = wakeActive ? 'active' : 'off';
-  if(wakeActive){ startWakeWordListener(); addLog('[WAKE] Wake word mode enabled','ok'); }
-  else { pauseWakeWord(); addLog('[WAKE] Wake word mode disabled','warn'); }
+  document.getElementById('wakeStatusText').textContent = wakeActive ? 'armed' : 'off';
+  if(wakeActive){
+    try{ const s = await navigator.mediaDevices.getUserMedia({audio:true}); s.getTracks().forEach(t=>t.stop()); }catch(e){}
+    startWakeWordListener();
+  } else {
+    pauseWakeWord(); addLog('[WAKE] Wake word mode disabled','warn');
+  }
 });
 
 // ---------- AR camera overlay mode ----------
@@ -774,18 +870,42 @@ async function toggleAR(){
     document.getElementById('arHint').classList.remove('show');
     arActive=false; arBtn.classList.remove('active'); arBtn.textContent='AR MODE';
     document.getElementById('arStatusText').textContent='standby';
+    if(!gogglesActive) perfSaveMode=false;
     addLog('[AR] Camera overlay deactivated','warn');
     return;
   }
+  const attempts = [
+    { label:'4K', video:{ facingMode:{ideal:'environment'}, width:{ideal:3840}, height:{ideal:2160}, frameRate:{ideal:60,max:60} } },
+    { label:'1080p', video:{ facingMode:{ideal:'environment'}, width:{ideal:1920}, height:{ideal:1080}, frameRate:{ideal:60,max:60} } },
+    { label:'default', video:{ facingMode:{ideal:'environment'} } }
+  ];
+  let lastErr=null;
+  for(const attempt of attempts){
+    try{
+      arStream = await navigator.mediaDevices.getUserMedia({ video:attempt.video, audio:false });
+      addLog('[AR] Camera acquired — requested '+attempt.label,'info');
+      break;
+    }catch(err){ lastErr=err; arStream=null; }
+  }
+  if(!arStream){
+    reply('I could not access the camera for augmented reality mode, sir. Please grant camera permission and ensure this page is served over HTTPS.');
+    addLog('[AR] Camera access denied','warn');
+    return;
+  }
   try{
-    arStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
     const v=document.getElementById('arVideo');
     v.srcObject=arStream; v.classList.add('show');
     document.body.classList.add('ar-mode');
     document.getElementById('arHint').classList.add('show');
     arActive=true; arBtn.classList.add('active'); arBtn.textContent='EXIT AR';
     document.getElementById('arStatusText').textContent='live';
-    addLog('[AR] Camera passthrough engaged','ok');
+    perfSaveMode=true;
+    const track = arStream.getVideoTracks()[0];
+    const settings = track && track.getSettings ? track.getSettings() : {};
+    const resLabel = settings.width && settings.height ? `${settings.width}×${settings.height}` : 'unknown res';
+    const fpsLabel = settings.frameRate ? Math.round(settings.frameRate)+'fps' : '?fps';
+    document.getElementById('arHint').textContent = `AR MODE — ${fpsLabel}`;
+    addLog('[AR] Camera passthrough engaged @ '+resLabel+' / '+fpsLabel,'ok');
     requestOrientationPermission();
   }catch(err){
     reply('I could not access the camera for augmented reality mode, sir. Please grant camera permission and ensure this page is served over HTTPS.');
@@ -861,10 +981,16 @@ class Particle {
   }
 }
 for(let i=0;i<80;i++) particles.push(new Particle());
-function animParticles(){
-  pCtx.clearRect(0,0,pCanvas.width,pCanvas.height);
-  particles.forEach(p=>{p.update();p.draw();});
-  pCtx.globalAlpha=1;
+let particleLastFrame=0;
+function animParticles(ts=0){
+  if(ts-particleLastFrame < FRAME_BUDGET_MS){ requestAnimationFrame(animParticles); return; }
+  particleLastFrame += FRAME_BUDGET_MS;
+  if(ts-particleLastFrame > FRAME_BUDGET_MS*2) particleLastFrame=ts;
+  if(!perfSaveMode){
+    pCtx.clearRect(0,0,pCanvas.width,pCanvas.height);
+    particles.forEach(p=>{p.update();p.draw();});
+    pCtx.globalAlpha=1;
+  }
   requestAnimationFrame(animParticles);
 }
 animParticles();
@@ -970,60 +1096,110 @@ document.getElementById('testVoiceBtn').addEventListener('click', ()=>{
 
 // ---------- Settings modal ----------
 const settingsOverlay = document.getElementById('settingsOverlay');
+function syncSettingsFieldVisibility(){
+  const p = document.getElementById('providerSelect').value;
+  document.getElementById('geminiFields').style.display = p==='gemini' ? 'block' : 'none';
+  document.getElementById('groqFields').style.display = p==='groq' ? 'block' : 'none';
+}
 document.getElementById('settingsBtn').addEventListener('click', ()=>{
+  document.getElementById('providerSelect').value = aiProvider;
   document.getElementById('geminiKeyInput').value = geminiApiKey;
   document.getElementById('geminiModelSelect').value = geminiModel;
+  document.getElementById('groqKeyInput').value = groqApiKey;
+  document.getElementById('groqModelSelect').value = groqModel;
+  syncSettingsFieldVisibility();
   settingsOverlay.classList.add('show');
 });
+document.getElementById('providerSelect').addEventListener('change', syncSettingsFieldVisibility);
 document.getElementById('settingsCancel').addEventListener('click', ()=> settingsOverlay.classList.remove('show'));
 document.getElementById('settingsSave').addEventListener('click', ()=>{
+  aiProvider = document.getElementById('providerSelect').value;
   geminiApiKey = document.getElementById('geminiKeyInput').value.trim();
   geminiModel = document.getElementById('geminiModelSelect').value;
+  groqApiKey = document.getElementById('groqKeyInput').value.trim() || BUILTIN_GROQ_KEY;
+  groqModel = document.getElementById('groqModelSelect').value;
+  localStorage.setItem('jarvis_provider', aiProvider);
   localStorage.setItem('jarvis_gemini_key', geminiApiKey);
   localStorage.setItem('jarvis_gemini_model', geminiModel);
+  localStorage.setItem('jarvis_groq_key', groqApiKey);
+  localStorage.setItem('jarvis_groq_model', groqModel);
   refreshGeminiStatus();
   settingsOverlay.classList.remove('show');
-  addLog('[SYS] Configuration updated','ok');
-  if(geminiApiKey) reply('Neural core linked to the Gemini network, sir. Ready when you are.');
+  addLog('[SYS] Configuration updated — provider: '+aiProvider,'ok');
+  const hasKey = aiProvider==='groq' ? !!groqApiKey : !!geminiApiKey;
+  if(hasKey) reply(`Neural core linked via ${aiProvider==='groq'?'Groq':'Gemini'}, sir. Ready when you are.`);
 });
 
-// ---------- Gemini API call ----------
+// ---------- Neural core dispatch (Gemini / Groq) ----------
 async function askJarvis(question){
-  if(!geminiApiKey){
-    reply('I require a Gemini API key to access my neural core, sir. Tap the gear icon to add one.');
+  const usingGroq = aiProvider==='groq';
+  const key = usingGroq ? groqApiKey : geminiApiKey;
+  if(!key){
+    reply(`I require a ${usingGroq?'Groq':'Gemini'} API key to access my neural core, sir. Tap the gear icon to add one.`);
     settingsOverlay.classList.add('show');
     return;
   }
   showTyping();
-  addLog('[AI] Query dispatched to Gemini neural core','info');
+  addLog('[AI] Query dispatched to '+(usingGroq?'Groq':'Gemini')+' neural core','info');
   try{
-    const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${geminiApiKey}`,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        system_instruction:{ parts:[{ text: JARVIS_SYSTEM_PROMPT }] },
-        contents:[{ role:'user', parts:[{ text: question }] }],
-        generationConfig:{ maxOutputTokens:400, temperature:0.8 }
-      })
-    });
+    const text = usingGroq ? await askGroq(question) : await askGemini(question);
     removeTyping();
-    if(!resp.ok){
-      const errBody = await resp.json().catch(()=>({}));
-      const msg = errBody?.error?.message || ('HTTP '+resp.status);
-      addLog('[AI] Gemini error: '+msg,'warn');
-      reply('My neural core rejected that request, sir. '+(resp.status===400?'The API key may be invalid.':'Please try again shortly.'));
-      return;
-    }
-    const data = await resp.json();
-    const text = data?.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join('')?.trim() || 'I encountered an anomaly processing that request, sir.';
-    addMsg('jarvis',text); jarvisSpeak(text);
+    addMsg('jarvis', text); jarvisSpeak(text);
     addLog('[AI] Response delivered','ok');
   }catch(err){
     removeTyping();
-    const e='I am unable to reach my neural core at the moment, sir. Please verify your network connection.';
-    addMsg('jarvis',e);jarvisSpeak(e);
-    addLog('[AI] Network fault — fallback','warn');
+    const e = err && err.userMessage ? err.userMessage : 'I am unable to reach my neural core at the moment, sir. Please verify your network connection.';
+    addMsg('jarvis',e); jarvisSpeak(e);
+    addLog('[AI] '+(err && err.logMessage ? err.logMessage : 'Network fault — fallback'),'warn');
   }
+}
+
+async function askGemini(question){
+  const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${geminiApiKey}`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      system_instruction:{ parts:[{ text: JARVIS_SYSTEM_PROMPT }] },
+      contents:[{ role:'user', parts:[{ text: question }] }],
+      generationConfig:{ maxOutputTokens:400, temperature:0.8 }
+    })
+  });
+  if(!resp.ok){
+    const errBody = await resp.json().catch(()=>({}));
+    const msg = errBody?.error?.message || ('HTTP '+resp.status);
+    const e = new Error(msg);
+    e.logMessage = 'Gemini error: '+msg;
+    e.userMessage = 'My neural core rejected that request, sir. '+(resp.status===400?'The API key may be invalid.':'Please try again shortly.');
+    throw e;
+  }
+  const data = await resp.json();
+  return data?.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join('')?.trim() || 'I encountered an anomaly processing that request, sir.';
+}
+
+async function askGroq(question){
+  const resp = await fetch('https://api.groq.com/openai/v1/chat/completions',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqApiKey},
+    body:JSON.stringify({
+      model: groqModel,
+      messages:[
+        { role:'system', content: JARVIS_SYSTEM_PROMPT },
+        { role:'user', content: question }
+      ],
+      max_tokens:400,
+      temperature:0.8
+    })
+  });
+  if(!resp.ok){
+    const errBody = await resp.json().catch(()=>({}));
+    const msg = errBody?.error?.message || ('HTTP '+resp.status);
+    const e = new Error(msg);
+    e.logMessage = 'Groq error: '+msg;
+    e.userMessage = 'My neural core rejected that request, sir. '+(resp.status===401?'The Groq API key may be invalid.':'Please try again shortly.');
+    throw e;
+  }
+  const data = await resp.json();
+  return data?.choices?.[0]?.message?.content?.trim() || 'I encountered an anomaly processing that request, sir.';
 }
 
 function reply(text){addMsg('jarvis',text);jarvisSpeak(text);}
@@ -1034,9 +1210,11 @@ const gogglesOverlay = document.getElementById('gogglesOverlay');
 let gogglesActive=false;
 let wakeLockRef=null;
 let gazeTargetEl=null, gazeStart=0, gazeRAF=null;
-const GAZE_DWELL_MS=1600;
+let paneIconCache=[]; // cached {pane, icons:[...]} built once per buildEyePanes() call
+const GAZE_DWELL_MS=1400;
 
 function buildEyePanes(){
+  paneIconCache=[];
   ['eyeLeft','eyeRight'].forEach(id=>{
     const pane=document.getElementById(id);
     pane.innerHTML='';
@@ -1048,12 +1226,26 @@ function buildEyePanes(){
     const wrap=document.createElement('div'); wrap.className='eye-orbit-wrap';
     wrap.appendChild(orbitClone);
     pane.appendChild(wrap);
+
+    // Vertical Vision-Pro style floating screen showing the live Jarvis feed
+    const screenPanel=document.createElement('div'); screenPanel.className='goggle-screen';
+    screenPanel.innerHTML = '<div class="goggle-screen-header"><span>JARVIS</span><span class="goggle-screen-dot"></span></div><div class="goggle-screen-msgs"></div>';
+    pane.appendChild(screenPanel);
+
     const cross=document.createElement('div'); cross.className='eye-crosshair';
     pane.appendChild(cross);
     const status=document.createElement('div'); status.className='eye-status';
-    status.textContent='J.A.R.V.I.S — GOGGLES ACTIVE — GAZE TO SELECT';
+    status.textContent='GAZE OR PINCH TO SELECT — SAY "HEY JARVIS"';
     pane.appendChild(status);
+    const handStatus=document.createElement('div'); handStatus.className='hand-status';
+    handStatus.textContent='HAND TRACKING — INIT';
+    pane.appendChild(handStatus);
+    const pinchCursor=document.createElement('div'); pinchCursor.className='pinch-cursor';
+    pane.appendChild(pinchCursor);
+
+    paneIconCache.push({ pane, icons:[...pane.querySelectorAll('.orbit-icon-inner')] });
   });
+  renderGogglePanels();
 }
 
 function triggerGazeCommand(cmd){
@@ -1062,27 +1254,33 @@ function triggerGazeCommand(cmd){
   handleCommand(cmd);
 }
 
+function highlightIcon(idx){
+  paneIconCache.forEach(p=>{ p.icons.forEach(i=>i.classList.remove('gaze-target')); });
+  if(idx<0) return;
+  paneIconCache.forEach(p=>{ if(p.icons[idx]) p.icons[idx].classList.add('gaze-target'); });
+}
+
 function startGazeLoop(){
   gazeTargetEl=null; gazeStart=0;
-  function loop(){
+  let lastFrame=0;
+  function loop(ts){
     if(!gogglesActive) return;
-    const pane = document.getElementById('eyeLeft');
-    const rect = pane.getBoundingClientRect();
+    if(ts-lastFrame < FRAME_BUDGET_MS){ gazeRAF=requestAnimationFrame(loop); return; }
+    lastFrame += FRAME_BUDGET_MS;
+    if(ts-lastFrame > FRAME_BUDGET_MS*2) lastFrame=ts; // resync after a stall (e.g. tab backgrounded)
+    const ref = paneIconCache[0];
+    if(!ref){ gazeRAF=requestAnimationFrame(loop); return; }
+    const rect = ref.pane.getBoundingClientRect();
     const cx = rect.left+rect.width/2, cy = rect.top+rect.height/2;
-    const icons = pane.querySelectorAll('.orbit-icon-inner');
     let closest=null, closestDist=Infinity, closestIdx=-1;
-    icons.forEach((icon,i)=>{
+    ref.icons.forEach((icon,i)=>{
       const r=icon.getBoundingClientRect();
       const ix=r.left+r.width/2, iy=r.top+r.height/2;
       const d=Math.hypot(ix-cx, iy-cy);
       if(d<closestDist){ closestDist=d; closest=icon; closestIdx=i; }
     });
-    document.querySelectorAll('.orbit-icon-inner').forEach(i=>i.classList.remove('gaze-target'));
     if(closest && closestDist<75){
-      document.querySelectorAll('.eye-pane').forEach(p=>{
-        const ic=p.querySelectorAll('.orbit-icon-inner')[closestIdx];
-        if(ic) ic.classList.add('gaze-target');
-      });
+      highlightIcon(closestIdx);
       if(gazeTargetEl!==closest){ gazeTargetEl=closest; gazeStart=performance.now(); }
       else if(performance.now()-gazeStart > GAZE_DWELL_MS){
         const cmd = closest.parentElement.getAttribute('data-cmd');
@@ -1090,6 +1288,7 @@ function startGazeLoop(){
         triggerGazeCommand(cmd);
       }
     } else {
+      highlightIcon(-1);
       gazeTargetEl=null; gazeStart=0;
     }
     gazeRAF=requestAnimationFrame(loop);
@@ -1099,7 +1298,7 @@ function startGazeLoop(){
 function stopGazeLoop(){
   if(gazeRAF) cancelAnimationFrame(gazeRAF);
   gazeRAF=null;
-  document.querySelectorAll('.orbit-icon-inner').forEach(i=>i.classList.remove('gaze-target'));
+  highlightIcon(-1);
 }
 
 gogglesOverlay.addEventListener('click',(e)=>{
@@ -1107,32 +1306,140 @@ gogglesOverlay.addEventListener('click',(e)=>{
   if(gazeTargetEl) triggerGazeCommand(gazeTargetEl.parentElement.getAttribute('data-cmd'));
 });
 
+// ---------- Pinch-to-select hand tracking (best effort — lazy loaded) ----------
+let handLandmarker=null, handRAF=null, handTrackingReady=false;
+let wasPinching=false, pinchCooldownUntil=0;
+const PINCH_THRESHOLD=0.06, PINCH_RELEASE=0.09;
+
+async function startHandTracking(){
+  const statusEls = ()=>document.querySelectorAll('.hand-status');
+  statusEls().forEach(el=>el.textContent='HAND TRACKING — LOADING');
+  try{
+    const vision = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/+esm');
+    const filesetResolver = await vision.FilesetResolver.forVisionTasks(
+      'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm'
+    );
+    handLandmarker = await vision.HandLandmarker.createFromOptions(filesetResolver,{
+      baseOptions:{
+        modelAssetPath:'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',
+        delegate:'GPU'
+      },
+      runningMode:'VIDEO',
+      numHands:1
+    });
+    handTrackingReady=true;
+    statusEls().forEach(el=>el.textContent='HAND TRACKING — READY, SHOW YOUR HAND');
+    addLog('[HANDS] Pinch gesture tracking online','ok');
+    handRAF=requestAnimationFrame(handLoop);
+  }catch(err){
+    statusEls().forEach(el=>el.textContent='HAND TRACKING UNAVAILABLE — USING GAZE ONLY');
+    addLog('[HANDS] Could not load hand tracking — gaze-dwell only','warn');
+  }
+}
+
+function mapVideoNormToScreen(nx, ny, videoEl, mirrored){
+  // videoEl is styled with object-fit:cover, so the visible frame is a centre-cropped
+  // window of the source video — map normalized (0..1) landmark coords through that crop.
+  const rect = videoEl.getBoundingClientRect();
+  const vw = videoEl.videoWidth || rect.width, vh = videoEl.videoHeight || rect.height;
+  const elemAR = rect.width/rect.height, videoAR = vw/vh;
+  let cropX=0, cropY=0, cropW=vw, cropH=vh;
+  if(videoAR > elemAR){ cropW = vh*elemAR; cropX = (vw-cropW)/2; }
+  else { cropH = vw/elemAR; cropY = (vh-cropH)/2; }
+  let px = nx; if(mirrored) px = 1-px;
+  const sx = rect.left + ((px*vw - cropX)/cropW) * rect.width;
+  const sy = rect.top + ((ny*vh - cropY)/cropH) * rect.height;
+  return {x:sx, y:sy};
+}
+
+let lastHandFrame=0;
+function handLoop(ts){
+  if(!gogglesActive){ handRAF=null; return; }
+  if(ts-lastHandFrame < FRAME_BUDGET_MS){ handRAF=requestAnimationFrame(handLoop); return; }
+  lastHandFrame += FRAME_BUDGET_MS;
+  if(ts-lastHandFrame > FRAME_BUDGET_MS*2) lastHandFrame=ts;
+  const videoEl = paneIconCache[0] && paneIconCache[0].pane.querySelector('video');
+  if(videoEl && handLandmarker && videoEl.readyState>=2){
+    try{
+      const result = handLandmarker.detectForVideo(videoEl, ts);
+      if(result && result.landmarks && result.landmarks.length>0){
+        const lm = result.landmarks[0];
+        const thumb = lm[4], index = lm[8];
+        const dist = Math.hypot(thumb.x-index.x, thumb.y-index.y, (thumb.z-index.z)*0.5);
+        const pt = mapVideoNormToScreen(index.x, index.y, videoEl, false);
+        const leftRect = videoEl.getBoundingClientRect();
+        const fracX = (pt.x-leftRect.left)/leftRect.width, fracY=(pt.y-leftRect.top)/leftRect.height;
+        let hitIdx=-1, hitCmd=null;
+        const ref = paneIconCache[0];
+        document.querySelectorAll('.eye-pane').forEach((paneEl,pi)=>{
+          const r = paneEl.getBoundingClientRect();
+          const cursor = paneEl.querySelector('.pinch-cursor');
+          if(cursor){
+            cursor.style.display='block';
+            cursor.style.left = (r.left + fracX*r.width) + 'px';
+            cursor.style.top = (r.top + fracY*r.height) + 'px';
+          }
+          if(pi===0 && ref){
+            const px = r.left + fracX*r.width, py = r.top + fracY*r.height;
+            ref.icons.forEach((icon,i)=>{
+              const ir=icon.getBoundingClientRect();
+              if(px>=ir.left-10 && px<=ir.right+10 && py>=ir.top-10 && py<=ir.bottom+10){
+                hitIdx=i; hitCmd=icon.parentElement.getAttribute('data-cmd');
+              }
+            });
+          }
+        });
+        const isPinching = dist < PINCH_THRESHOLD;
+        document.querySelectorAll('.pinch-cursor').forEach(c=>c.classList.toggle('active', isPinching));
+        if(hitIdx>=0) highlightIcon(hitIdx);
+        if(isPinching && !wasPinching && hitCmd && performance.now()>pinchCooldownUntil){
+          wasPinching=true;
+          pinchCooldownUntil = performance.now()+900;
+          triggerGazeCommand(hitCmd);
+        } else if(dist > PINCH_RELEASE){
+          wasPinching=false;
+        }
+      } else {
+        document.querySelectorAll('.pinch-cursor').forEach(c=>c.style.display='none');
+      }
+    }catch(e){ /* silent per-frame errors — keep the loop alive */ }
+  }
+  handRAF=requestAnimationFrame(handLoop);
+}
+function stopHandTracking(){
+  if(handRAF) cancelAnimationFrame(handRAF);
+  handRAF=null;
+  document.querySelectorAll('.pinch-cursor').forEach(c=>c.style.display='none');
+}
+
 async function enterGoggles(){
   if(gogglesActive) return;
   gogglesActive=true;
+  perfSaveMode=true;
   if(!arActive){ await toggleAR(); }
   if(!arActive){ gogglesActive=false; return; } // camera permission was denied
-  if(!wakeActive){ wakeBtn.click(); }
+  if(!wakeActive && wakeSupported){ wakeBtn.click(); }
   buildEyePanes();
   gogglesOverlay.classList.add('show');
   gogglesBtn.classList.add('active');
   try{ await document.documentElement.requestFullscreen(); }catch(e){}
-  try{ if(screen.orientation && screen.orientation.lock) await screen.orientation.lock('landscape'); }catch(e){}
   try{ if('wakeLock' in navigator) wakeLockRef = await navigator.wakeLock.request('screen'); }catch(e){}
   requestOrientationPermission();
   startGazeLoop();
+  startHandTracking();
   addLog('[GOGGLES] Stereo AR mode engaged','ok');
-  reply('Goggles mode engaged, sir. Gaze at an icon to select it, or simply speak your command.');
+  reply('Goggles mode engaged, sir. Pinch an icon to select it, gaze also works, or simply speak your command.');
 }
 
 function exitGoggles(){
   if(!gogglesActive) return;
   gogglesActive=false;
+  perfSaveMode = arActive; // stay lean if plain AR is still on, otherwise resume normal fx
   gogglesOverlay.classList.remove('show');
   gogglesBtn.classList.remove('active');
   stopGazeLoop();
+  stopHandTracking();
   if(wakeLockRef){ wakeLockRef.release().catch(()=>{}); wakeLockRef=null; }
-  try{ if(screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); }catch(e){}
   if(document.fullscreenElement){ document.exitFullscreen().catch(()=>{}); }
   addLog('[GOGGLES] Stereo AR mode disengaged','warn');
 }
