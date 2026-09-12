@@ -115,6 +115,14 @@
   /* ---------- Goggles / stereo split-screen AR mode ---------- */
   #gogglesOverlay{display:none;position:fixed;inset:0;background:#000;z-index:2000;flex-direction:row;}
   #gogglesOverlay.show{display:flex;}
+  #rotateHint{display:none;position:fixed;inset:0;z-index:2001;background:#000;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--hud);text-align:center;padding:40px;font-family:'Rajdhani',sans-serif;letter-spacing:1px;}
+  #rotateHint svg{animation:rotateHintSpin 1.8s ease-in-out infinite;}
+  #rotateHint .rotate-sub{color:var(--muted);font-size:13px;max-width:320px;line-height:1.5;}
+  @keyframes rotateHintSpin{0%,20%{transform:rotate(0deg);}50%,70%{transform:rotate(-90deg);}100%{transform:rotate(-90deg);}}
+  @media(orientation:portrait){
+    #gogglesOverlay.show #rotateHint{display:flex;}
+    #gogglesOverlay.show .eye-pane,#gogglesOverlay.show #gogglesExit{visibility:hidden;}
+  }
   .eye-pane{position:relative;flex:1;height:100%;overflow:hidden;border-right:1px solid rgba(0,200,255,0.15);background:#000;}
   .eye-pane:last-child{border-right:none;}
   .eye-pane video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
@@ -399,6 +407,11 @@
   <div class="eye-pane" id="eyeLeft"></div>
   <div class="eye-pane" id="eyeRight"></div>
   <button id="gogglesExit">✕ EXIT GOGGLES</button>
+  <div id="rotateHint">
+    <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#00c8ff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M12 18h.01"/></svg>
+    <div>ROTATE TO LANDSCAPE</div>
+    <div class="rotate-sub">Turn your phone sideways to strap into goggles. If it doesn't rotate automatically, enable Auto-rotate in your phone's quick settings.</div>
+  </div>
 </div>
 
 <!-- VOICE OVERLAY -->
@@ -461,6 +474,37 @@
         </select>
       </div>
     </div>
+    <div class="settings-note" style="margin-top:18px;border-top:1px solid rgba(255,255,255,0.08);padding-top:14px;">Choose a voice engine for JARVIS to speak with.</div>
+    <div class="settings-field">
+      <label class="settings-label">VOICE ENGINE</label>
+      <select class="settings-input" id="voiceEngineSelect">
+        <option value="browser">Browser (built-in, free)</option>
+        <option value="elevenlabs">ElevenLabs (realistic AI voice)</option>
+      </select>
+    </div>
+    <div id="elevenlabsFields" style="display:none;">
+      <div class="settings-field">
+        <label class="settings-label">ELEVENLABS API KEY</label>
+        <input class="settings-input" id="elevenlabsKeyInput" type="password" placeholder="sk_..." autocomplete="off"/>
+        <div class="settings-note" style="margin:6px 0 0;">Get a key: <a href="https://elevenlabs.io/app/settings/api-keys" target="_blank" rel="noopener">elevenlabs.io/app/settings/api-keys</a></div>
+      </div>
+      <div class="settings-field">
+        <label class="settings-label">VOICE</label>
+        <select class="settings-input" id="elevenlabsVoiceSelect">
+          <option value="sLfduly0sixkh8riDzed">Charlie (British male — recommended)</option>
+          <option value="pNInz6obpgDQGcFmaJgB">Adam (deep male)</option>
+          <option value="onwK4e9ZLuTAKqWW03F9">Daniel (British male)</option>
+          <option value="TxGEqnHWrfWFTfGW9XjX">Josh (male)</option>
+          <option value="21m00Tcm4TlvDq8ikWAM">Rachel (female)</option>
+          <option value="custom">Custom voice ID...</option>
+        </select>
+      </div>
+      <div class="settings-field" id="elevenlabsCustomVoiceField" style="display:none;">
+        <label class="settings-label">CUSTOM VOICE ID</label>
+        <input class="settings-input" id="elevenlabsCustomVoiceInput" type="text" placeholder="Paste voice ID from your ElevenLabs library" autocomplete="off"/>
+      </div>
+      <div class="settings-note" style="margin:0 0 6px;">Uses your ElevenLabs quota — sent directly from this browser to ElevenLabs.</div>
+    </div>
     <div class="settings-actions">
       <button class="btn" id="settingsCancel" style="background:transparent;color:var(--muted);">CLOSE</button>
       <button class="btn btn-send" id="settingsSave">SAVE</button>
@@ -493,11 +537,18 @@ let voiceOverlayOpen = false;
 // A built-in default key so anyone opening this link works out of the box.
 // NOTE: this is visible to anyone who views this page's source.
 const BUILTIN_GROQ_KEY = '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';
-let aiProvider = localStorage.getItem('jarvis_provider') || 'groq';
+let aiProvider = localStorage.getItem('jarvis_provider') || 'gemini';
 let geminiApiKey = localStorage.getItem('jarvis_gemini_key') || '';
 let geminiModel = localStorage.getItem('jarvis_gemini_model') || 'gemini-2.5-flash';
 let groqApiKey = localStorage.getItem('jarvis_groq_key') || BUILTIN_GROQ_KEY;
 let groqModel = localStorage.getItem('jarvis_groq_model') || 'llama-3.3-70b-versatile';
+
+// ---------- Voice engine config (Browser / ElevenLabs) ----------
+let voiceEngine = localStorage.getItem('jarvis_voice_engine') || 'browser';
+let elevenlabsKey = localStorage.getItem('jarvis_elevenlabs_key') || '';
+let elevenlabsVoiceId = localStorage.getItem('jarvis_elevenlabs_voice') || 'sLfduly0sixkh8riDzed';
+let currentElevenAudio = null;
+
 function refreshGeminiStatus(){
   const active = aiProvider==='groq' ? !!groqApiKey : !!geminiApiKey;
   const label = aiProvider==='groq' ? 'groq' : 'gemini';
@@ -508,7 +559,7 @@ refreshGeminiStatus();
 // perfSaveMode trims background visual work (particles, log spam) while AR/goggles
 // need every spare cycle for the camera feed and (optionally) hand tracking.
 let perfSaveMode = false;
-const FRAME_BUDGET_MS = 1000/60; // steady 60fps ceiling for all our own rAF-driven loops
+const FRAME_BUDGET_MS = 1000/100; // 100fps ceiling for all our own rAF-driven loops (display's own refresh rate still applies)
 
 // ---------- PWA install + service worker ----------
 if('serviceWorker' in navigator){
@@ -639,8 +690,16 @@ function showTyping(){
 }
 function removeTyping(){const t=document.getElementById('typing');if(t)t.remove();}
 
-function jarvisSpeak(text){
-  if(!ttsEnabled)return;
+function stopAllSpeech(){
+  try{ window.speechSynthesis.cancel(); }catch(e){}
+  if(currentElevenAudio){
+    try{ currentElevenAudio.pause(); currentElevenAudio.currentTime=0; }catch(e){}
+    currentElevenAudio=null;
+  }
+  isSpeaking=false;
+}
+
+function speakWithBrowser(text){
   window.speechSynthesis.cancel();
   const utter=new SpeechSynthesisUtterance(text);
   const voices=window.speechSynthesis.getVoices();
@@ -658,6 +717,51 @@ function jarvisSpeak(text){
   window.speechSynthesis.speak(utter);
 }
 window.speechSynthesis.onvoiceschanged=()=>{};
+
+async function speakWithElevenLabs(text){
+  try{
+    const resp = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${elevenlabsVoiceId}`,{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'xi-api-key': elevenlabsKey,
+        'Accept':'audio/mpeg'
+      },
+      body: JSON.stringify({
+        text: text,
+        model_id: 'eleven_turbo_v2_5',
+        voice_settings:{ stability:0.5, similarity_boost:0.75, speed: Math.min(1.2, Math.max(0.7, speechRate)) }
+      })
+    });
+    if(!resp.ok){
+      const errBody = await resp.json().catch(()=>({}));
+      const msg = errBody?.detail?.message || errBody?.detail?.status || ('HTTP '+resp.status);
+      throw new Error('ElevenLabs error: '+msg);
+    }
+    const blob = await resp.blob();
+    const url = URL.createObjectURL(blob);
+    const audio = new Audio(url);
+    audio.volume = speechVolume;
+    currentElevenAudio = audio;
+    isSpeaking=true; vizLabel.textContent='AUDIO OUTPUT — J.A.R.V.I.S SPEAKING';
+    audio.onended=()=>{ isSpeaking=false; vizLabel.textContent='AUDIO SPECTRUM — IDLE'; URL.revokeObjectURL(url); if(currentElevenAudio===audio)currentElevenAudio=null; };
+    audio.onerror=()=>{ isSpeaking=false; vizLabel.textContent='AUDIO SPECTRUM — IDLE'; };
+    await audio.play();
+  }catch(err){
+    addLog('[VOICE] '+(err.message||'ElevenLabs playback failed')+' — falling back to browser voice','warn');
+    speakWithBrowser(text);
+  }
+}
+
+function jarvisSpeak(text){
+  if(!ttsEnabled)return;
+  stopAllSpeech();
+  if(voiceEngine==='elevenlabs' && elevenlabsKey){
+    speakWithElevenLabs(text);
+  }else{
+    speakWithBrowser(text);
+  }
+}
 
 // Waveform
 const waveCanvas=document.getElementById('waveCanvas');
@@ -782,7 +886,7 @@ ttsToggle.addEventListener('click',()=>{
   ttsEnabled=!ttsEnabled;
   ttsToggle.classList.toggle('on',ttsEnabled);
   ttsStatus.textContent=ttsEnabled?'ON — American voice active':'OFF — silent mode';
-  if(!ttsEnabled)window.speechSynthesis.cancel();
+  if(!ttsEnabled)stopAllSpeech();
 });
 
 // ---------- Wake word: "Hey Jarvis" ----------
@@ -875,8 +979,10 @@ async function toggleAR(){
     return;
   }
   const attempts = [
-    { label:'4K', video:{ facingMode:{ideal:'environment'}, width:{ideal:3840}, height:{ideal:2160}, frameRate:{ideal:60,max:60} } },
-    { label:'1080p', video:{ facingMode:{ideal:'environment'}, width:{ideal:1920}, height:{ideal:1080}, frameRate:{ideal:60,max:60} } },
+    { label:'1080p@100fps', video:{ facingMode:{ideal:'environment'}, width:{ideal:1920}, height:{ideal:1080}, frameRate:{ideal:100,max:100} } },
+    { label:'720p@100fps', video:{ facingMode:{ideal:'environment'}, width:{ideal:1280}, height:{ideal:720}, frameRate:{ideal:100,max:100} } },
+    { label:'4K@60fps', video:{ facingMode:{ideal:'environment'}, width:{ideal:3840}, height:{ideal:2160}, frameRate:{ideal:60,max:60} } },
+    { label:'1080p@60fps', video:{ facingMode:{ideal:'environment'}, width:{ideal:1920}, height:{ideal:1080}, frameRate:{ideal:60,max:60} } },
     { label:'default', video:{ facingMode:{ideal:'environment'} } }
   ];
   let lastErr=null;
@@ -1074,7 +1180,6 @@ makeDial('pitchCanvas','pitchLabel', 0.4, 1.2, 0.85, 2, v=>{ speechPitch=v; });
 makeDial('volCanvas','volLabel', 0.0, 1.0, 1.0, 2, v=>{ speechVolume=v; });
 
 document.getElementById('testVoiceBtn').addEventListener('click', ()=>{
-  window.speechSynthesis.cancel();
   const phrases = [
     'Voice calibration complete, sir. All systems nominal.',
     'Reactor output is stable. Standing by.',
@@ -1082,16 +1187,11 @@ document.getElementById('testVoiceBtn').addEventListener('click', ()=>{
     'Ready and online, sir.',
   ];
   const txt = phrases[Math.floor(Math.random()*phrases.length)];
-  const u = new SpeechSynthesisUtterance(txt);
-  const voices = window.speechSynthesis.getVoices();
-  const preferred=['Microsoft Guy','Microsoft David','Google US English','Reed','Alex','Aaron','Fred'];
-  let chosen = null;
-  for(const p of preferred){ chosen=voices.find(v=>v.name.includes(p)); if(chosen)break; }
-  if(!chosen) chosen = voices.find(v=>v.lang==='en-US')||voices[0];
-  if(chosen) u.voice = chosen;
-  u.rate = speechRate; u.pitch = speechPitch; u.volume = speechVolume;
-  window.speechSynthesis.speak(u);
-  addLog('[VOICE] Test fired — rate:'+speechRate.toFixed(2)+' pitch:'+speechPitch.toFixed(2),'ok');
+  const wasEnabled = ttsEnabled;
+  ttsEnabled = true;
+  jarvisSpeak(txt);
+  ttsEnabled = wasEnabled;
+  addLog('[VOICE] Test fired via '+(voiceEngine==='elevenlabs'&&elevenlabsKey?'ElevenLabs':'browser')+' — rate:'+speechRate.toFixed(2)+' pitch:'+speechPitch.toFixed(2),'ok');
 });
 
 // ---------- Settings modal ----------
@@ -1100,6 +1200,10 @@ function syncSettingsFieldVisibility(){
   const p = document.getElementById('providerSelect').value;
   document.getElementById('geminiFields').style.display = p==='gemini' ? 'block' : 'none';
   document.getElementById('groqFields').style.display = p==='groq' ? 'block' : 'none';
+  const v = document.getElementById('voiceEngineSelect').value;
+  document.getElementById('elevenlabsFields').style.display = v==='elevenlabs' ? 'block' : 'none';
+  const vs = document.getElementById('elevenlabsVoiceSelect').value;
+  document.getElementById('elevenlabsCustomVoiceField').style.display = vs==='custom' ? 'block' : 'none';
 }
 document.getElementById('settingsBtn').addEventListener('click', ()=>{
   document.getElementById('providerSelect').value = aiProvider;
@@ -1107,10 +1211,22 @@ document.getElementById('settingsBtn').addEventListener('click', ()=>{
   document.getElementById('geminiModelSelect').value = geminiModel;
   document.getElementById('groqKeyInput').value = groqApiKey;
   document.getElementById('groqModelSelect').value = groqModel;
+  document.getElementById('voiceEngineSelect').value = voiceEngine;
+  document.getElementById('elevenlabsKeyInput').value = elevenlabsKey;
+  const knownVoiceIds = ['sLfduly0sixkh8riDzed','pNInz6obpgDQGcFmaJgB','onwK4e9ZLuTAKqWW03F9','TxGEqnHWrfWFTfGW9XjX','21m00Tcm4TlvDq8ikWAM'];
+  if(knownVoiceIds.includes(elevenlabsVoiceId)){
+    document.getElementById('elevenlabsVoiceSelect').value = elevenlabsVoiceId;
+    document.getElementById('elevenlabsCustomVoiceInput').value = '';
+  }else{
+    document.getElementById('elevenlabsVoiceSelect').value = 'custom';
+    document.getElementById('elevenlabsCustomVoiceInput').value = elevenlabsVoiceId;
+  }
   syncSettingsFieldVisibility();
   settingsOverlay.classList.add('show');
 });
 document.getElementById('providerSelect').addEventListener('change', syncSettingsFieldVisibility);
+document.getElementById('voiceEngineSelect').addEventListener('change', syncSettingsFieldVisibility);
+document.getElementById('elevenlabsVoiceSelect').addEventListener('change', syncSettingsFieldVisibility);
 document.getElementById('settingsCancel').addEventListener('click', ()=> settingsOverlay.classList.remove('show'));
 document.getElementById('settingsSave').addEventListener('click', ()=>{
   aiProvider = document.getElementById('providerSelect').value;
@@ -1118,15 +1234,30 @@ document.getElementById('settingsSave').addEventListener('click', ()=>{
   geminiModel = document.getElementById('geminiModelSelect').value;
   groqApiKey = document.getElementById('groqKeyInput').value.trim() || BUILTIN_GROQ_KEY;
   groqModel = document.getElementById('groqModelSelect').value;
+
+  voiceEngine = document.getElementById('voiceEngineSelect').value;
+  elevenlabsKey = document.getElementById('elevenlabsKeyInput').value.trim();
+  const voiceSelectVal = document.getElementById('elevenlabsVoiceSelect').value;
+  elevenlabsVoiceId = voiceSelectVal==='custom'
+    ? (document.getElementById('elevenlabsCustomVoiceInput').value.trim() || 'sLfduly0sixkh8riDzed')
+    : voiceSelectVal;
+
   localStorage.setItem('jarvis_provider', aiProvider);
   localStorage.setItem('jarvis_gemini_key', geminiApiKey);
   localStorage.setItem('jarvis_gemini_model', geminiModel);
   localStorage.setItem('jarvis_groq_key', groqApiKey);
   localStorage.setItem('jarvis_groq_model', groqModel);
+  localStorage.setItem('jarvis_voice_engine', voiceEngine);
+  localStorage.setItem('jarvis_elevenlabs_key', elevenlabsKey);
+  localStorage.setItem('jarvis_elevenlabs_voice', elevenlabsVoiceId);
+
   refreshGeminiStatus();
   settingsOverlay.classList.remove('show');
-  addLog('[SYS] Configuration updated — provider: '+aiProvider,'ok');
+  addLog('[SYS] Configuration updated — provider: '+aiProvider+', voice: '+voiceEngine,'ok');
   const hasKey = aiProvider==='groq' ? !!groqApiKey : !!geminiApiKey;
+  if(voiceEngine==='elevenlabs' && !elevenlabsKey){
+    addLog('[VOICE] ElevenLabs selected but no API key set — using browser voice until one is added','warn');
+  }
   if(hasKey) reply(`Neural core linked via ${aiProvider==='groq'?'Groq':'Gemini'}, sir. Ready when you are.`);
 });
 
@@ -1424,6 +1555,14 @@ async function enterGoggles(){
   gogglesBtn.classList.add('active');
   try{ await document.documentElement.requestFullscreen(); }catch(e){}
   try{ if('wakeLock' in navigator) wakeLockRef = await navigator.wakeLock.request('screen'); }catch(e){}
+  try{
+    if(screen.orientation && screen.orientation.lock){
+      await screen.orientation.lock('landscape');
+      addLog('[GOGGLES] Auto-rotated to landscape','ok');
+    }
+  }catch(e){
+    addLog('[GOGGLES] Could not force landscape — rotate manually or enable auto-rotate','warn');
+  }
   requestOrientationPermission();
   startGazeLoop();
   startHandTracking();
@@ -1440,6 +1579,7 @@ function exitGoggles(){
   stopGazeLoop();
   stopHandTracking();
   if(wakeLockRef){ wakeLockRef.release().catch(()=>{}); wakeLockRef=null; }
+  try{ if(screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); }catch(e){}
   if(document.fullscreenElement){ document.exitFullscreen().catch(()=>{}); }
   addLog('[GOGGLES] Stereo AR mode disengaged','warn');
 }
@@ -1471,7 +1611,8 @@ setTimeout(()=>{
   const h=new Date().getHours();const g=h<12?'Good morning':h<18?'Good afternoon':'Good evening';
   const text=`${g}, sir. Jarvis online. All systems are nominal and standing by for your instructions.`;
   addMsg('jarvis',text);jarvisSpeak(text);
-  if(!geminiApiKey){ setTimeout(()=>{ reply('I notice no Gemini API key is configured, sir. Tap the gear icon whenever you would like to link my neural core.'); }, 2600); }
+  const noKeyConfigured = aiProvider==='groq' ? !groqApiKey : !geminiApiKey;
+  if(noKeyConfigured){ setTimeout(()=>{ reply(`I notice no ${aiProvider==='groq'?'Groq':'Gemini'} API key is configured, sir. Tap the gear icon whenever you would like to link my neural core.`); }, 2600); }
 },800);
 
 sendBtn.addEventListener('click',()=>{handleCommand(cmdInput.value);cmdInput.value='';});
